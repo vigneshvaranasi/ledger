@@ -1,5 +1,6 @@
 import { fetchAllExpenses } from "@/lib/notion";
 import { Dashboard } from "@/components/dashboard/dashboard";
+import { LogoutButton } from "@/components/logout-button";
 import type { Expense } from "@/lib/types";
 
 export const revalidate = 60;
@@ -30,6 +31,10 @@ export default async function Page() {
       ) : (
         <Dashboard expenses={expenses} />
       )}
+
+      <footer className="mt-10 flex justify-center border-t pt-6">
+        <LogoutButton />
+      </footer>
     </main>
   );
 }
