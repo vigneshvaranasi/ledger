@@ -11,6 +11,16 @@ export type Expense = {
   notes: string;
 };
 
+export type NewExpense = {
+  name: string;
+  amount: number;
+  type: TxType;
+  category: string | null;
+  method: string | null;
+  date: string | null;
+  notes: string;
+};
+
 export function normalize(row: any): Expense {
   const p = row?.properties ?? {};
   const rawType = p["Type"]?.select?.name;

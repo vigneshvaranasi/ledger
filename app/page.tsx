@@ -1,5 +1,7 @@
 import { fetchAllExpenses } from "@/lib/notion";
+import { distinctValues } from "@/lib/aggregate";
 import { Dashboard } from "@/components/dashboard/dashboard";
+import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { LogoutButton } from "@/components/logout-button";
 import type { Expense } from "@/lib/types";
 
@@ -15,10 +17,14 @@ export default async function Page() {
     error = err?.message ?? "Failed to load expenses from Notion.";
   }
 
+  const categories = distinctValues(expenses, "category");
+  const methods = distinctValues(expenses, "method");
+
   return (
     <main className="mx-auto w-full max-w-6xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <header className="mb-8">
+      <header className="mb-8 flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Ledger</h1>
+        <AddExpenseDialog categories={categories} methods={methods} />
       </header>
 
       {error ? (

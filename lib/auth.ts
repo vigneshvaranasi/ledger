@@ -54,4 +54,11 @@ export function checkPassword(input: string): boolean {
   return timingSafeEqual(input, expected);
 }
 
+export function checkLogToken(token: string | undefined): boolean {
+  const expected = process.env.LOG_TOKEN;
+  if (!expected) return false;
+  if (!token || token.length !== expected.length) return false;
+  return timingSafeEqual(token, expected);
+}
+
 export const SESSION_MAX_AGE = MAX_AGE_SECONDS;

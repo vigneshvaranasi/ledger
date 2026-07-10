@@ -1,6 +1,6 @@
 import "server-only";
 import { Client } from "@notionhq/client";
-import { normalize, type Expense } from "./types";
+import { normalize, type Expense, type NewExpense } from "./types";
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 
@@ -44,4 +44,24 @@ export async function fetchAllExpenses(): Promise<Expense[]> {
   } while (cursor);
 
   return rows.map(normalize);
+}
+
+export async function createExpense(input: NewExpense): Promise<string> {
+  const dataSourceId = await resolveDataSourceId();
+
+  const properties: Record<string, any> = {
+    Expense: { title: [{ text: { content: input.name } }] },
+    Amount: { number: input.amount },
+    Type: { select: { name: input.type } },
+  };
+  if (input.category) properties["Category"] = { select: { name: input.category } };
+  if (input.method) properties["Payment Method"] = { select: { name: input.method } };
+  if (input.date) properties["Date"] = { date: { start: input.date } };
+  if (input.notes) properties["Notes"] = { rich_text: [{ text: { content: input.notes } }] };
+
+  const res: any = await notion.pages.create({
+    parent: { type: "data_source_id", data_source_id: dataSourceId },
+    properties,
+  });
+  return res.id;
 }
