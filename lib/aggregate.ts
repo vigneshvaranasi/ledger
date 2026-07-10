@@ -14,12 +14,6 @@ export function today(now = new Date()): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-export function prevMonth(ym: string): string {
-  const [y, m] = ym.split("-").map(Number);
-  const d = new Date(y, m - 2, 1);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-}
-
 function parseDay(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -105,12 +99,6 @@ export function monthlyTrend(data: Expense[]): TrendRow[] {
     map.set(k, row);
   }
   return [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
-}
-
-export function distinctMonths(data: Expense[]): string[] {
-  const set = new Set<string>();
-  for (const e of data) if (e.date) set.add(ym(e.date));
-  return [...set].sort((a, b) => b.localeCompare(a));
 }
 
 export function distinctValues(

@@ -1,4 +1,4 @@
-import { fetchAllExpenses } from "@/lib/notion";
+import { fetchAllExpenses, fetchOptions } from "@/lib/notion";
 import { distinctValues } from "@/lib/aggregate";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
@@ -17,8 +17,16 @@ export default async function Page() {
     error = err?.message ?? "Failed to load expenses from Notion.";
   }
 
-  const categories = distinctValues(expenses, "category");
-  const methods = distinctValues(expenses, "method");
+  let categories: string[];
+  let methods: string[];
+  try {
+    const opts = await fetchOptions();
+    categories = opts.categories;
+    methods = opts.methods;
+  } catch {
+    categories = distinctValues(expenses, "category");
+    methods = distinctValues(expenses, "method");
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">

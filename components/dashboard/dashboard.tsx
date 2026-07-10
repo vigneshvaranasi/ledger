@@ -32,6 +32,7 @@ import { RecentTable } from "./recent-table";
 import { KpiCard, DeltaSub } from "./kpi-card";
 import { FilterSelect } from "./filter-select";
 import { DateRangeFilter } from "./date-range-filter";
+import { SpendCalendar } from "./spend-calendar";
 
 export function Dashboard({ expenses }: { expenses: Expense[] }) {
   const categories = useMemo(
@@ -167,6 +168,12 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Heatmap */}
+      <SpendCalendar
+        expenses={expenses}
+        onSelectDay={(iso) => setFilters((f) => ({ ...f, from: iso, to: iso }))}
+      />
 
       {/* Monthly trend */}
       <Card>
