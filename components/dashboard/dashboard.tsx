@@ -13,27 +13,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { inr, monthLabel, monthShort } from "@/lib/format";
+import { inr, rangeLabel } from "@/lib/format";
 import type { Expense } from "@/lib/types";
 import {
   applyFilters,
   byKey,
-  distinctMonths,
   distinctValues,
-  kpis,
+  kpisRange,
   monthlyTrend,
   pctChange,
-  prevMonth,
+  prevRange,
   thisMonth,
+  today,
   type Filters,
 } from "@/lib/aggregate";
 import { Donut, TrendBars } from "./charts";
 import { RecentTable } from "./recent-table";
 import { KpiCard, DeltaSub } from "./kpi-card";
 import { FilterSelect } from "./filter-select";
+import { DateRangeFilter } from "./date-range-filter";
 
 export function Dashboard({ expenses }: { expenses: Expense[] }) {
-  const months = useMemo(() => distinctMonths(expenses), [expenses]);
   const categories = useMemo(
     () => distinctValues(expenses, "category"),
     [expenses]
@@ -41,7 +41,8 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
   const methods = useMemo(() => distinctValues(expenses, "method"), [expenses]);
 
   const [filters, setFilters] = useState<Filters>({
-    month: "all",
+    from: `${thisMonth()}-01`,
+    to: today(),
     category: "all",
     method: "all",
   });
@@ -51,37 +52,36 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
     [expenses, filters]
   );
 
-  const kpiMonth = filters.month === "all" ? thisMonth() : filters.month;
-  const k = useMemo(() => kpis(expenses, kpiMonth), [expenses, kpiMonth]);
-
-  const kPrev = useMemo(
-    () => kpis(expenses, prevMonth(kpiMonth)),
-    [expenses, kpiMonth]
+  const k = useMemo(
+    () => kpisRange(expenses, filters.from, filters.to),
+    [expenses, filters.from, filters.to]
   );
-  const incomeDelta = pctChange(k.income, kPrev.income);
-  const spentDelta = pctChange(k.spent, kPrev.spent);
-  const prevLabel = monthShort(prevMonth(kpiMonth));
+
+  const prev =
+    filters.from && filters.to ? prevRange(filters.from, filters.to) : null;
+  const kPrev = useMemo(
+    () => (prev ? kpisRange(expenses, prev.from, prev.to) : null),
+    [expenses, prev?.from, prev?.to]
+  );
+  const incomeDelta = kPrev ? pctChange(k.income, kPrev.income) : null;
+  const spentDelta = kPrev ? pctChange(k.spent, kPrev.spent) : null;
   const savingsRate = k.income > 0 ? Math.round((k.net / k.income) * 100) : null;
 
   const catData = useMemo(() => byKey(filtered, "category"), [filtered]);
   const methodData = useMemo(() => byKey(filtered, "method"), [filtered]);
   const trend = useMemo(() => monthlyTrend(expenses), [expenses]);
 
-  const monthText =
-    filters.month === "all"
-      ? monthLabel(thisMonth())
-      : monthLabel(filters.month);
+  const rangeText = rangeLabel(filters.from, filters.to);
 
   return (
     <div className="space-y-6">
       {/* Filters */}
       <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
-        <FilterSelect
-          label="Month"
-          value={filters.month}
-          onValueChange={(v) => setFilters((f) => ({ ...f, month: v ?? "all" }))}
-          options={months.map((m) => ({ value: m, label: monthLabel(m) }))}
-          allLabel="All months"
+        <DateRangeFilter
+          value={{ from: filters.from, to: filters.to }}
+          onChange={(v) =>
+            setFilters((f) => ({ ...f, from: v.from, to: v.to }))
+          }
         />
         <FilterSelect
           label="Category"
@@ -106,18 +106,26 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
       {/* KPI cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label={`Income · ${monthText}`}
+          label={`Income · ${rangeText}`}
           value={inr(k.income)}
           icon={<ArrowUpRight className="size-4" />}
           accent="income"
-          sub={<DeltaSub pct={incomeDelta} prevLabel={prevLabel} />}
+          sub={
+            prev ? (
+              <DeltaSub pct={incomeDelta} prevLabel="prev period" />
+            ) : undefined
+          }
         />
         <KpiCard
-          label={`Spent · ${monthText}`}
+          label={`Spent · ${rangeText}`}
           value={inr(k.spent)}
           icon={<ArrowDownRight className="size-4" />}
           accent="spend"
-          sub={<DeltaSub pct={spentDelta} prevLabel={prevLabel} />}
+          sub={
+            prev ? (
+              <DeltaSub pct={spentDelta} prevLabel="prev period" />
+            ) : undefined
+          }
         />
         <KpiCard
           label="Spent today"
@@ -126,7 +134,7 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
           accent="muted"
         />
         <KpiCard
-          label={`Net saved · ${monthText}`}
+          label={`Net saved · ${rangeText}`}
           value={inr(k.net)}
           icon={<PiggyBank className="size-4" />}
           accent={k.net >= 0 ? "income" : "spend"}

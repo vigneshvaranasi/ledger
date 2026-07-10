@@ -20,6 +20,27 @@ export function prevMonth(ym: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
+function parseDay(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+export function shiftDays(iso: string, n: number): string {
+  const d = parseDay(iso);
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+export function daysBetween(from: string, to: string): number {
+  return Math.round(
+    (parseDay(to).getTime() - parseDay(from).getTime()) / 86_400_000
+  ) + 1;
+}
+export function prevRange(from: string, to: string): { from: string; to: string } {
+  const len = daysBetween(from, to);
+  const prevTo = shiftDays(from, -1);
+  const prevFrom = shiftDays(prevTo, -(len - 1));
+  return { from: prevFrom, to: prevTo };
+}
+
 export function pctChange(cur: number, prev: number): number | null {
   if (!prev) return null;
   return Math.round(((cur - prev) / prev) * 100);
@@ -32,18 +53,22 @@ export type Kpis = {
   todaySpent: number;
 };
 
-export function kpis(data: Expense[], month = thisMonth()): Kpis {
-  const inMonth = (e: Expense) => e.date?.slice(0, 7) === month;
+export function kpisRange(
+  data: Expense[],
+  from: string | null,
+  to: string | null
+): Kpis {
   const td = today();
   let income = 0;
   let spent = 0;
   let todaySpent = 0;
   for (const e of data) {
-    if (inMonth(e)) {
+    const d = e.date;
+    if (d && (!from || d >= from) && (!to || d <= to)) {
       if (isIncome(e)) income += e.amount;
       else spent += e.amount;
     }
-    if (isExpense(e) && e.date === td) todaySpent += e.amount;
+    if (isExpense(e) && d === td) todaySpent += e.amount;
   }
   return { income, spent, net: income - spent, todaySpent };
 }
@@ -101,14 +126,17 @@ export function distinctValues(
 }
 
 export type Filters = {
-  month: string | "all";
+  from: string | null;
+  to: string | null;
   category: string | "all";
   method: string | "all";
 };
 
 export function applyFilters(data: Expense[], f: Filters): Expense[] {
   return data.filter((e) => {
-    if (f.month !== "all" && e.date?.slice(0, 7) !== f.month) return false;
+    const d = e.date;
+    if (f.from && (!d || d < f.from)) return false;
+    if (f.to && (!d || d > f.to)) return false;
     if (f.category !== "all" && (e.category ?? "Uncategorized") !== f.category)
       return false;
     if (f.method !== "all" && (e.method ?? "—") !== f.method) return false;

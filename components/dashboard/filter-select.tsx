@@ -25,7 +25,7 @@ export function FilterSelect({
         {label}
       </span>
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full sm:w-40" size="sm">
+        <SelectTrigger className="min-w-0 flex-1 sm:w-40 sm:flex-none" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

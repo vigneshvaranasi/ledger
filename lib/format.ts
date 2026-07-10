@@ -25,6 +25,27 @@ export function monthShort(ym: string): string {
   return new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short" });
 }
 
+export function rangeLabel(from: string | null, to: string | null): string {
+  if (!from && !to) return "All time";
+  const toDate = (s: string) => {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const fmt = (d: Date, withYear = false) =>
+    d.toLocaleString(
+      "en-US",
+      withYear
+        ? { day: "numeric", month: "short", year: "numeric" }
+        : { day: "numeric", month: "short" }
+    );
+  if (from && to) {
+    if (from === to) return fmt(toDate(from), true);
+    return `${fmt(toDate(from))} – ${fmt(toDate(to), true)}`;
+  }
+  if (from) return `From ${fmt(toDate(from), true)}`;
+  return `Until ${fmt(toDate(to!), true)}`;
+}
+
 export function dayLabel(iso: string | null): string {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-").map(Number);
