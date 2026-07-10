@@ -45,6 +45,25 @@ export async function fetchAllExpenses(): Promise<Expense[]> {
 
   return rows.map(normalize);
 }
+export async function fetchOptions(): Promise<{
+  categories: string[];
+  methods: string[];
+}> {
+  const dataSourceId = await resolveDataSourceId();
+  const ds: any = await notion.dataSources.retrieve({
+    data_source_id: dataSourceId,
+  });
+  const props = ds?.properties ?? {};
+  const optionsOf = (name: string): string[] =>
+    (props[name]?.select?.options ?? [])
+      .map((o: any) => o?.name)
+      .filter((n: any): n is string => typeof n === "string" && n.length > 0);
+
+  return {
+    categories: optionsOf("Category"),
+    methods: optionsOf("Payment Method"),
+  };
+}
 
 export async function createExpense(input: NewExpense): Promise<string> {
   const dataSourceId = await resolveDataSourceId();

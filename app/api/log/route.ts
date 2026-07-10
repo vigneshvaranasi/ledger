@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import {
-  SESSION_COOKIE,
-  checkLogToken,
-  verifySessionToken,
-} from "@/lib/auth";
+import { authorizeRequest } from "@/lib/api-auth";
 import { createExpense } from "@/lib/notion";
 import type { NewExpense, TxType } from "@/lib/types";
 
 export const runtime = "nodejs";
-
-async function authorize(req: Request): Promise<boolean> {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ") && checkLogToken(auth.slice(7).trim())) {
-    return true;
-  }
-  const jar = await cookies();
-  return verifySessionToken(jar.get(SESSION_COOKIE)?.value);
-}
 
 function parse(body: any): { data?: NewExpense; error?: string } {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
@@ -48,7 +34,7 @@ function parse(body: any): { data?: NewExpense; error?: string } {
 }
 
 export async function POST(req: Request) {
-  if (!(await authorize(req))) {
+  if (!(await authorizeRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
