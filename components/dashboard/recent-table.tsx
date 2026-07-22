@@ -31,8 +31,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { inr, dayLabel } from "@/lib/format";
+import { inr, dayLabel, rangeLabel } from "@/lib/format";
 import type { Expense } from "@/lib/types";
+import type { DateRangeValue } from "./date-range-filter";
 
 type SortKey = "date" | "name" | "type" | "category" | "method" | "amount";
 type Dir = "asc" | "desc";
@@ -76,8 +77,10 @@ function SortHead({
 
 export function RecentTable({
   rows,
+  dateRange,
 }: {
   rows: Expense[];
+  dateRange: DateRangeValue;
 }) {
   const [sort, setSort] = useState<SortKey>("date");
   const [dir, setDir] = useState<Dir>("desc");
@@ -154,24 +157,50 @@ export function RecentTable({
   });
 
   function exportXlsx() {
-    const sheet = XLSX.utils.json_to_sheet(
-      sorted.map((row) => ({
-        Date: row.date ?? "",
-        Transaction: row.name,
-        Type: row.type,
-        Category: row.category ?? "",
-        "Payment method": row.method ?? "",
-        Amount: row.amount,
-        Notes: row.notes,
-      }))
-    );
+    const exportedAt = new Date();
+    const exportTimestamp = exportedAt.toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    const dateRangeLabel = rangeLabel(dateRange.from, dateRange.to);
+    const activeFilters = [
+      query.trim() ? `Search: ${query.trim()}` : null,
+      type !== "all" ? `Type: ${type}` : null,
+      category !== "all" ? `Category: ${category}` : null,
+      method !== "all" ? `Method: ${method}` : null,
+    ].filter(Boolean).join(" · ") || "None";
+    const filenameDate = dateRange.from && dateRange.to
+      ? `${dateRange.from}_to_${dateRange.to}`
+      : "all-dates";
+    const filenameTime = `${exportedAt.getFullYear()}-${String(exportedAt.getMonth() + 1).padStart(2, "0")}-${String(exportedAt.getDate()).padStart(2, "0")}_${String(exportedAt.getHours()).padStart(2, "0")}-${String(exportedAt.getMinutes()).padStart(2, "0")}`;
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ["Ledger transactions"],
+      ["Date range", dateRangeLabel],
+      ["Table filters", activeFilters],
+      ["Transactions exported", sorted.length],
+      ["Exported at", exportTimestamp],
+      [],
+    ]);
+    XLSX.utils.sheet_add_json(sheet, sorted.map((row) => ({
+      Date: row.date ?? "",
+      Transaction: row.name,
+      Type: row.type,
+      Category: row.category ?? "",
+      "Payment method": row.method ?? "",
+      Amount: row.amount,
+      Notes: row.notes,
+    })), { origin: "A7" });
+    sheet["!merges"] = [XLSX.utils.decode_range("A1:G1")];
     sheet["!cols"] = [
       { wch: 14 }, { wch: 30 }, { wch: 12 }, { wch: 20 },
       { wch: 20 }, { wch: 14 }, { wch: 42 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, "Transactions");
-    XLSX.writeFile(workbook, "ledger-transactions.xlsx");
+    XLSX.writeFile(
+      workbook,
+      `ledger-transactions_${filenameDate}_exported-${filenameTime}.xlsx`
+    );
   }
 
   if (rows.length === 0) {

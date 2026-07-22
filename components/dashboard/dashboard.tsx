@@ -161,7 +161,7 @@ export function Dashboard({
           <CardTitle>Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <RecentTable rows={filteredExpenses} />
+          <RecentTable rows={filteredExpenses} dateRange={dateRange} />
         </CardContent>
       </Card>
     </div>

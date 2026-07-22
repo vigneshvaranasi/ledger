@@ -44,7 +44,13 @@ export default async function Page() {
       ) : (
         <Dashboard
           expenses={expenses}
-          action={<AddExpenseDialog categories={categories} methods={methods} />}
+          action={
+            <AddExpenseDialog
+              key="add-transaction"
+              categories={categories}
+              methods={methods}
+            />
+          }
         />
       )}
 
