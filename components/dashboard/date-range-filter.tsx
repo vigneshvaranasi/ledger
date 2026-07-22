@@ -94,8 +94,8 @@ export function DateRangeFilter({
   }
 
   return (
-    <div className="flex w-full items-center gap-2 sm:w-auto">
-      <span className="w-20 shrink-0 text-sm text-muted-foreground sm:w-auto">
+    <div className="flex shrink-0 items-center gap-2">
+      <span className="shrink-0 text-sm text-muted-foreground">
         Dates
       </span>
       <Popover open={open} onOpenChange={setOpen}>
@@ -103,7 +103,7 @@ export function DateRangeFilter({
           <Button
             variant="outline"
             size="sm"
-            className="min-w-0 flex-1 justify-start font-normal sm:w-48 sm:flex-none"
+            className="w-40 justify-start font-normal sm:w-48"
           >
             <CalendarIcon className="size-4 shrink-0" />
             <span className="truncate">
