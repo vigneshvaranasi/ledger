@@ -32,7 +32,6 @@ export default async function Page() {
     <main className="mx-auto w-full max-w-6xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="mb-8 flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Ledger</h1>
-        <AddExpenseDialog categories={categories} methods={methods} />
       </header>
 
       {error ? (
@@ -43,7 +42,10 @@ export default async function Page() {
           <p className="mt-1 text-muted-foreground">{error}</p>
         </div>
       ) : (
-        <Dashboard expenses={expenses} />
+        <Dashboard
+          expenses={expenses}
+          action={<AddExpenseDialog categories={categories} methods={methods} />}
+        />
       )}
 
       <footer className="mt-10 flex justify-center border-t pt-6">

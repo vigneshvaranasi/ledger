@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -18,90 +18,67 @@ import type { Expense } from "@/lib/types";
 import {
   applyFilters,
   byKey,
-  distinctValues,
   kpisRange,
   monthlyTrend,
   pctChange,
   prevRange,
   thisMonth,
   today,
-  type Filters,
 } from "@/lib/aggregate";
 import { Donut, TrendBars } from "./charts";
 import { RecentTable } from "./recent-table";
 import { KpiCard, DeltaSub } from "./kpi-card";
-import { FilterSelect } from "./filter-select";
-import { DateRangeFilter } from "./date-range-filter";
 import { SpendCalendar } from "./spend-calendar";
+import { DateRangeFilter, type DateRangeValue } from "./date-range-filter";
 
-export function Dashboard({ expenses }: { expenses: Expense[] }) {
-  const categories = useMemo(
-    () => distinctValues(expenses, "category"),
-    [expenses]
-  );
-  const methods = useMemo(() => distinctValues(expenses, "method"), [expenses]);
-
-  const [filters, setFilters] = useState<Filters>({
+export function Dashboard({
+  expenses,
+  action,
+}: {
+  expenses: Expense[];
+  action: ReactNode;
+}) {
+  const [dateRange, setDateRange] = useState<DateRangeValue>({
     from: `${thisMonth()}-01`,
     to: today(),
-    category: "all",
-    method: "all",
   });
-
-  const filtered = useMemo(
-    () => applyFilters(expenses, filters),
-    [expenses, filters]
+  const filteredExpenses = useMemo(
+    () =>
+      applyFilters(expenses, {
+        from: dateRange.from,
+        to: dateRange.to,
+        category: "all",
+        method: "all",
+      }),
+    [expenses, dateRange]
   );
 
   const k = useMemo(
-    () => kpisRange(expenses, filters.from, filters.to),
-    [expenses, filters.from, filters.to]
+    () => kpisRange(expenses, dateRange.from, dateRange.to),
+    [expenses, dateRange]
   );
 
-  const prev =
-    filters.from && filters.to ? prevRange(filters.from, filters.to) : null;
+  const prev = dateRange.from && dateRange.to
+    ? prevRange(dateRange.from, dateRange.to)
+    : null;
   const kPrev = useMemo(
     () => (prev ? kpisRange(expenses, prev.from, prev.to) : null),
-    [expenses, prev?.from, prev?.to]
+    [expenses, prev]
   );
   const incomeDelta = kPrev ? pctChange(k.income, kPrev.income) : null;
   const spentDelta = kPrev ? pctChange(k.spent, kPrev.spent) : null;
   const savingsRate = k.income > 0 ? Math.round((k.net / k.income) * 100) : null;
 
-  const catData = useMemo(() => byKey(filtered, "category"), [filtered]);
-  const methodData = useMemo(() => byKey(filtered, "method"), [filtered]);
+  const catData = useMemo(() => byKey(filteredExpenses, "category"), [filteredExpenses]);
+  const methodData = useMemo(() => byKey(filteredExpenses, "method"), [filteredExpenses]);
   const trend = useMemo(() => monthlyTrend(expenses), [expenses]);
-
-  const rangeText = rangeLabel(filters.from, filters.to);
+  const rangeText = rangeLabel(dateRange.from, dateRange.to);
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
-        <DateRangeFilter
-          value={{ from: filters.from, to: filters.to }}
-          onChange={(v) =>
-            setFilters((f) => ({ ...f, from: v.from, to: v.to }))
-          }
-        />
-        <FilterSelect
-          label="Category"
-          value={filters.category}
-          onValueChange={(v) =>
-            setFilters((f) => ({ ...f, category: v ?? "all" }))
-          }
-          options={categories.map((c) => ({ value: c, label: c }))}
-          allLabel="All categories"
-        />
-        <FilterSelect
-          label="Method"
-          value={filters.method}
-          onValueChange={(v) =>
-            setFilters((f) => ({ ...f, method: v ?? "all" }))
-          }
-          options={methods.map((m) => ({ value: m, label: m }))}
-          allLabel="All methods"
-        />
+      <div className="flex items-center justify-between gap-3">
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        {action}
       </div>
 
       {/* KPI cards */}
@@ -112,9 +89,7 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
           icon={<ArrowUpRight className="size-4" />}
           accent="income"
           sub={
-            prev ? (
-              <DeltaSub pct={incomeDelta} prevLabel="prev period" />
-            ) : undefined
+            <DeltaSub pct={incomeDelta} prevLabel="prev period" />
           }
         />
         <KpiCard
@@ -123,9 +98,7 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
           icon={<ArrowDownRight className="size-4" />}
           accent="spend"
           sub={
-            prev ? (
-              <DeltaSub pct={spentDelta} prevLabel="prev period" />
-            ) : undefined
+            <DeltaSub pct={spentDelta} prevLabel="prev period" />
           }
         />
         <KpiCard
@@ -170,10 +143,7 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
       </div>
 
       {/* Heatmap */}
-      <SpendCalendar
-        expenses={expenses}
-        onSelectDay={(iso) => setFilters((f) => ({ ...f, from: iso, to: iso }))}
-      />
+      <SpendCalendar expenses={expenses} />
 
       {/* Monthly trend */}
       <Card>
@@ -191,7 +161,7 @@ export function Dashboard({ expenses }: { expenses: Expense[] }) {
           <CardTitle>Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <RecentTable rows={filtered} />
+          <RecentTable rows={filteredExpenses} />
         </CardContent>
       </Card>
     </div>

@@ -62,7 +62,14 @@ export function kpisRange(
       if (isIncome(e)) income += e.amount;
       else spent += e.amount;
     }
-    if (isExpense(e) && d === td) todaySpent += e.amount;
+    if (
+      isExpense(e) &&
+      d === td &&
+      (!from || d >= from) &&
+      (!to || d <= to)
+    ) {
+      todaySpent += e.amount;
+    }
   }
   return { income, spent, net: income - spent, todaySpent };
 }

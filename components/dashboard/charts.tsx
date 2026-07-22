@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -18,6 +19,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { Button } from "@/components/ui/button";
 import { inr, inrCompact, monthShort } from "@/lib/format";
 import type { Slice, TrendRow } from "@/lib/aggregate";
 
@@ -119,6 +121,18 @@ export function Donut({ data }: { data: Slice[] }) {
 }
 
 export function TrendBars({ data }: { data: TrendRow[] }) {
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
+  const years = useMemo(
+    () => [...new Set(data.map((row) => Number(row.month.slice(0, 4))))]
+      .sort((a, b) => b - a),
+    [data]
+  );
+  const selectedYear = years.includes(year) ? year : (years[0] ?? currentYear);
+  const rows = data
+    .filter((row) => row.month.startsWith(`${selectedYear}-`))
+    .map((row) => ({ ...row, label: monthShort(row.month) }));
+
   if (data.length === 0) {
     return (
       <div className="flex h-70 items-center justify-center text-sm text-muted-foreground">
@@ -132,11 +146,28 @@ export function TrendBars({ data }: { data: TrendRow[] }) {
     spent: { label: "Spent", color: "hsl(25 95% 58%)" },
   } satisfies ChartConfig;
 
-  const rows = data.map((d) => ({ ...d, label: monthShort(d.month) }));
-
   return (
-    <ChartContainer config={config} className="h-70 w-full min-w-0">
-      <BarChart data={rows} margin={{ left: 4, right: 4, top: 8 }}>
+    <div className="space-y-3">
+      <div className="-mx-1 flex gap-1 overflow-x-auto px-1">
+        {years.map((value) => (
+          <Button
+            key={value}
+            size="sm"
+            variant={value === selectedYear ? "secondary" : "ghost"}
+            className="h-7 shrink-0 px-2.5 text-xs tabular-nums"
+            onClick={() => setYear(value)}
+          >
+            {value}
+          </Button>
+        ))}
+      </div>
+      {rows.length === 0 ? (
+        <div className="flex h-70 items-center justify-center text-sm text-muted-foreground">
+          No data for {selectedYear}.
+        </div>
+      ) : (
+      <ChartContainer config={config} className="h-70 w-full min-w-0">
+        <BarChart data={rows} margin={{ left: 4, right: 4, top: 8 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis
           dataKey="label"
@@ -179,7 +210,9 @@ export function TrendBars({ data }: { data: TrendRow[] }) {
           radius={[4, 4, 0, 0]}
           isAnimationActive={false}
         />
-      </BarChart>
-    </ChartContainer>
+        </BarChart>
+      </ChartContainer>
+      )}
+    </div>
   );
 }
