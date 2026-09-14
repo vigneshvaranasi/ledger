@@ -13,6 +13,12 @@ const ACCENT: Record<string, string> = {
   muted: "text-muted-foreground",
 };
 
+const ICON_SURFACE: Record<string, string> = {
+  income: "bg-primary/10",
+  spend: "bg-[var(--warning)]/10",
+  muted: "bg-muted",
+};
+
 export function KpiCard({
   label,
   value,
@@ -27,20 +33,33 @@ export function KpiCard({
   sub?: React.ReactNode;
 }) {
   return (
-    <Card className="min-w-0">
-      <CardHeader className="pb-2">
+    <Card className="min-w-0 gap-3 border-border/70 py-5 shadow-none transition-shadow hover:shadow-sm">
+      <CardHeader className="gap-0 px-5 pb-0">
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <CardDescription className="min-w-0 truncate">{label}</CardDescription>
-          <span className={cn("shrink-0", ACCENT[accent])}>{icon}</span>
+          <CardDescription className="min-w-0 truncate text-sm">
+            {label}
+          </CardDescription>
+          <span
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-lg",
+              ICON_SURFACE[accent],
+              ACCENT[accent]
+            )}
+          >
+            {icon}
+          </span>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-5">
         <div
-          className={cn("text-2xl font-semibold tabular-nums", ACCENT[accent])}
+          className={cn(
+            "text-2xl font-semibold tracking-tight tabular-nums",
+            ACCENT[accent]
+          )}
         >
           {value}
         </div>
-        {sub ? <div className="mt-1">{sub}</div> : null}
+        <div className="mt-2 min-h-5">{sub}</div>
       </CardContent>
     </Card>
   );

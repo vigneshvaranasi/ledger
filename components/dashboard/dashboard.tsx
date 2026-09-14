@@ -82,45 +82,56 @@ export function Dashboard({
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label={`Income · ${rangeText}`}
-          value={inr(k.income)}
-          icon={<ArrowUpRight className="size-4" />}
-          accent="income"
-          sub={
-            <DeltaSub pct={incomeDelta} prevLabel="prev period" />
-          }
-        />
-        <KpiCard
-          label={`Spent · ${rangeText}`}
-          value={inr(k.spent)}
-          icon={<ArrowDownRight className="size-4" />}
-          accent="spend"
-          sub={
-            <DeltaSub pct={spentDelta} prevLabel="prev period" />
-          }
-        />
-        <KpiCard
-          label="Spent today"
-          value={inr(k.todaySpent)}
-          icon={<CalendarDays className="size-4" />}
-          accent="muted"
-        />
-        <KpiCard
-          label={`Net saved · ${rangeText}`}
-          value={inr(k.net)}
-          icon={<PiggyBank className="size-4" />}
-          accent={k.net >= 0 ? "income" : "spend"}
-          sub={
-            savingsRate != null ? (
-              <span className="text-xs text-muted-foreground">
-                {savingsRate}% of income saved
-              </span>
-            ) : undefined
-          }
-        />
-      </div>
+      <section aria-label={`Summary for ${rangeText}`} className="space-y-2">
+        <div className="flex justify-center sm:hidden">
+          <span className="rounded-full bg-muted/70 px-3 py-1.5 text-xs text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground/70">{rangeText}</span>
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard
+            label="Income"
+            value={inr(k.income)}
+            icon={<ArrowUpRight className="size-4" />}
+            accent="income"
+            sub={<DeltaSub pct={incomeDelta} prevLabel="prev period" />}
+          />
+          <KpiCard
+            label="Spent"
+            value={inr(k.spent)}
+            icon={<ArrowDownRight className="size-4" />}
+            accent="spend"
+            sub={<DeltaSub pct={spentDelta} prevLabel="prev period" />}
+          />
+          <KpiCard
+            label="Spent today"
+            value={inr(k.todaySpent)}
+            icon={<CalendarDays className="size-4" />}
+            accent="muted"
+          />
+          <KpiCard
+            label="Net saved"
+            value={inr(k.net)}
+            icon={<PiggyBank className="size-4" />}
+            accent={k.net >= 0 ? "income" : "spend"}
+            sub={
+              savingsRate != null ? (
+                <span className="text-xs text-muted-foreground">
+                  {savingsRate}% of income saved
+                </span>
+              ) : undefined
+            }
+          />
+        </div>
+        <div className="hidden items-center justify-center gap-3 px-1 text-xs text-muted-foreground sm:flex">
+          <span aria-hidden="true" className="hidden h-px flex-1 bg-border/70 sm:block" />
+          <span className="whitespace-nowrap rounded-full bg-muted/70 px-3 py-1.5 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0">
+            Showing <span className="font-medium text-foreground/70">{rangeText}</span>
+          </span>
+          <span aria-hidden="true" className="hidden h-px flex-1 bg-border/70 sm:block" />
+        </div>
+      </section>
 
       {/* Donuts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
