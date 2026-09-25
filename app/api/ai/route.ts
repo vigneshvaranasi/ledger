@@ -36,6 +36,9 @@ function today() {
 }
 
 export async function POST(req: Request) {
+  if (process.env.IS_AI_ENABLED !== "true") {
+    return NextResponse.json({ error: "AI is disabled" }, { status: 404 });
+  }
   if (!(await authorizeRequest(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { message, categories, methods } = await req.json().catch(() => ({}));
   if (typeof message !== "string" || !message.trim()) {

@@ -16,8 +16,6 @@ export const metadata: Metadata = {
   description: "Expense dashboard",
 };
 
-const themeScript = `try{if(matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}}catch(e){}`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +28,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeShortcut />
         {children}
         <Toaster />

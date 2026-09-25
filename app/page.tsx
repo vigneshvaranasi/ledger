@@ -5,10 +5,14 @@ import { AddExpenseDialog } from '@/components/add-expense-dialog'
 import { AiLedgerDialog } from '@/components/ai-ledger-dialog'
 import { LogoutButton } from '@/components/logout-button'
 import type { Expense } from '@/lib/types'
+import { HomePage } from '@/components/public-site'
 
 export const revalidate = 60
 
 export default async function Page () {
+  if (process.env.IS_DEMO === 'true') return <HomePage />
+
+  const isAiEnabled = process.env.IS_AI_ENABLED === 'true'
   let expenses: Expense[] = []
   let error: string | null = null
 
@@ -49,10 +53,11 @@ export default async function Page () {
         <Dashboard
           expenses={expenses}
           action={
-            <div className='flex items-center gap-2'>
-              <AiLedgerDialog categories={categories} methods={methods} />
+            <div key='dashboard-actions' className='flex items-center gap-2'>
+              {isAiEnabled ? (
+                <AiLedgerDialog categories={categories} methods={methods} />
+              ) : null}
               <AddExpenseDialog
-                key='add-transaction'
                 categories={categories}
                 methods={methods}
               />
